@@ -1,5 +1,6 @@
 locals {
-  region = terraform.workspace
+  region = split("_", terraform.workspace)[1]
+  db_name = replace("my-mysql-db-${terraform.workspace}", "/(['\\*_])/", "-")
 }
 
 terraform {
@@ -14,11 +15,6 @@ terraform {
 provider "aws" {
   region = local.region
 }
-
-# provider "aws" {
-#   region = "us-west-2"
-#   alias = "us-west-2"
-# }
 
 terraform {
   backend "s3" {

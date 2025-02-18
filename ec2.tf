@@ -4,7 +4,7 @@ resource "tls_private_key" "pem_key" {
 }
 
 resource "aws_key_pair" "deployer" {
-  key_name   = "deployer-key"
+  key_name   = "SSH-${terraform.workspace}-key"
   public_key = tls_private_key.pem_key.public_key_openssh
 }
 
@@ -39,8 +39,37 @@ resource "aws_instance" "web" {
 
   key_name = aws_key_pair.deployer.key_name
 
-  count = length(module.vpc.private_subnets)
-  
-  subnet_id = module.vpc.private_subnets[count.index]
+  iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.name
 
+  vpc_security_group_ids = [ aws_security_group.ec2_sg.id ]
+
+  count = length(module.vpc.public_subnets)
+  
+  subnet_id = module.vpc.public_subnets[count.index]
+
+  tags = {
+    name = "Web-${terraform.workspace}"
+  }
+
+}
+
+resource "aws_security_group" "ec2_sg" {
+  name        = "EC2-security-group-${terraform.workspace}"
+  description = "Allow EC2 access"
+
+  vpc_id = module.vpc.vpc_id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [ "0.0.0.0/0" ]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
