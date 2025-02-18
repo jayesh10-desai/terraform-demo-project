@@ -44,7 +44,10 @@ resource "aws_iam_policy" "secrets-manager-policy" {
                     "secretsmanager:DescribeSecret",
                     "secretsmanager:ListSecretVersionIds"    
                 ],
-                "Resource": "${aws_secretsmanager_secret.secretmasterDB.arn}/*"
+                "Resource": [
+                  "${aws_secretsmanager_secret.secretmasterDB.arn}",
+                  "${aws_secretsmanager_secret.db_secret.arn}"
+                ]
             }
         ]
       })
